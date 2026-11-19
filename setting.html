@@ -147,6 +147,26 @@
                     </div>
                 </div>
 
+                <div class="settings-section appearance-section">
+                    <div class="section-title">Appearance</div>
+                    <div class="appearance-copy">
+                        <div class="appearance-icon"><i class="fa-solid fa-palette"></i></div>
+                        <div class="appearance-description">
+                            <strong>Choose your look</strong>
+                            <p>Switch between a bright study space and a comfortable night view.</p>
+                        </div>
+                    </div>
+                    <div class="theme-switch" role="group" aria-label="Choose appearance">
+                        <button type="button" class="theme-option" data-theme-choice="light" aria-pressed="false">
+                            <i class="fa-regular fa-sun"></i><span>Light mode</span>
+                        </button>
+                        <button type="button" class="theme-option" data-theme-choice="dark" aria-pressed="false">
+                            <i class="fa-regular fa-moon"></i><span>Dark mode</span>
+                        </button>
+                    </div>
+                    <p class="theme-status" id="themeStatus" aria-live="polite">Dark mode is on</p>
+                </div>
+
                 <div class="settings-section">
                     <div class="section-title">Security & Privacy</div>
                     <div class="settings-item" onclick="window.location.href='private.html'">
