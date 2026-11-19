@@ -338,3 +338,20 @@ body {
 .skeleton-title { width: 40%; height: 16px; margin-bottom: 12px; }
 .skeleton-text { width: 90%; height: 12px; margin-bottom: 8px; }
 .skeleton-text.short { width: 60%; }
+
+
+/* Shared theme tokens from Settings */
+html[data-theme="light"] {
+ --bg-black:#f4f5fb; --bg-dark:#ffffff; --bg-light:#f0eff8; --accent:#6846c7;
+ --text-main:#242039; --text-dim:#68647c; --text-faint:#89859a; --border:rgba(72,57,120,.14);
+ color-scheme:light;
+}
+html[data-theme="light"] body { background:var(--bg-black); color:var(--text-main); }
+html[data-theme="light"] .top-nav, html[data-theme="light"] .side-panel { background:#fff; }
+html[data-theme="light"] .icon-btn, html[data-theme="light"] .menu a:hover,
+html[data-theme="light"] .active-link { background:#f0eff8; color:var(--accent)!important; }
+html[data-theme="light"] .post { background:#fff; }
+html[data-theme="light"] .post:hover { background:#f8f6ff; }
+html[data-theme="light"] .post-body p, html[data-theme="light"] .menu a { color:#302b46; }
+html[data-theme="light"] .modal-content { background:#fff; color:#242039; }
+html[data-theme="light"] .shimmer { background:linear-gradient(90deg,#eeeef5 25%,#e1deed 50%,#eeeef5 75%); background-size:200% 100%; }
