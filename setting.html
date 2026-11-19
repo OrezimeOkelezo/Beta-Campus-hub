@@ -112,7 +112,7 @@
     <header class="top-nav">
         <div class="nav-left">
             <a href="home.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
-            <h2>Settings</h2>
+            <div class="nav-heading"><h2>Settings</h2><p>Make your campus space feel like yours</p></div>
         </div>
     </header>
 
@@ -189,6 +189,25 @@
     </div>
 
     <script>
+        // Apply the saved appearance before the rest of the page initializes.
+        const THEME_KEY = "beta-campus-theme";
+        function applyTheme(theme) {
+            const selectedTheme = theme === "light" ? "light" : "dark";
+            document.documentElement.dataset.theme = selectedTheme;
+            localStorage.setItem(THEME_KEY, selectedTheme);
+            document.querySelectorAll("[data-theme-choice]").forEach(button => {
+                const active = button.dataset.themeChoice === selectedTheme;
+                button.classList.toggle("active", active);
+                button.setAttribute("aria-pressed", String(active));
+            });
+            const status = document.getElementById("themeStatus");
+            if (status) status.textContent = selectedTheme === "light" ? "Light mode is on" : "Dark mode is on";
+        }
+        applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+        document.querySelectorAll("[data-theme-choice]").forEach(button => {
+            button.addEventListener("click", () => applyTheme(button.dataset.themeChoice));
+        });
+
         const SUPABASE_URL = 'https://nwhskxqwtpkuiwkcdols.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_tX-yn5PPUsrILFHsI5SALA__ovoxFje';
         const supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -212,8 +231,8 @@
 
             document.getElementById("displayUsername").innerText = name;
             document.getElementById("displayAvatar").src = avatar;
-            document.getElementById("displayMatric").innerHTML = `<i class="fa-solid fa-id-card"></i> ${matric}`;
-            document.getElementById("displayBio").innerHTML = `<i class="fa-regular fa-message"></i> ${bio}`;
+            document.getElementById("displayMatric").textContent = `▣ ${matric}`;
+            document.getElementById("displayBio").textContent = `✎ ${bio}`;
             
             document.getElementById("newName").value = name;
             document.getElementById("newBio").value = currentProfileData.bio || "";
