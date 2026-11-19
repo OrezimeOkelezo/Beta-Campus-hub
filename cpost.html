@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Post - Student Connect</title>
+    <link rel="stylesheet" href="css/cpost.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Essential dynamic styles if not in your CSS */
+        #postSubmitBtn.active { background-color: #a881ff !important; color: white !important; opacity: 1 !important; cursor: pointer; }
+        .image-preview-wrapper { position: relative; display: inline-block; width: 80px; height: 80px; margin: 5px; }
+        .preview-img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+        .remove-img-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; cursor: pointer; width: 20px; height: 20px; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <header class="top-nav">
+        <div class="header-inner">
+            <div class="nav-left">
+                <a href="home.html" class="back-btn">
+                    <i class="fa-solid fa-arrow-left"></i> 
+                    <span>Cancel</span>
+                </a>
+            </div>
+            <div class="nav-right">
+                <button id="postSubmitBtn" disabled>Post</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="create-post-container">
+        <div class="post-header-info">
+            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="User" class="avatar" id="currentUserAvatar">
+            <span class="user-name" id="currentUserName">Loading...</span>
+        </div>
+
+        <textarea id="postContent" rows="6" placeholder="What's on your mind?"></textarea>
+
+        <div class="media-section">
+            <h4 class="media-title">Add images <span id="imgCount">(0/4)</span></h4>
+            <div class="image-grid" id="imageGrid">
+                <label for="imageUpload" class="add-image-btn" id="addImageLabel">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Select image</span>
+                </label>
+            </div>
+            <input type="file" id="imageUpload" accept="image/*" multiple hidden>
+        </div>
+    </main>
+
+    <script>
+        const SUPABASE_URL = 'https://nwhskxqwtpkuiwkcdols.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_tX-yn5PPUsrILFHsI5SALA__ovoxFje';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const postContent = document.getElementById('postContent');
+        const postSubmitBtn = document.getElementById('postSubmitBtn');
+        const imageUpload = document.getElementById('imageUpload');
+        const imageGrid = document.getElementById('imageGrid');
+        
+        let selectedFiles = [];
+        let currentUser = null;
+
+        async function init() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) {
+                window.location.href = "sign.html";
+                return;
+            }
+            currentUser = user;
+
+            // Use the same metadata keys used in your settings.html
+            const name = user.user_metadata.full_name || "Student";
+            const avatar = user.user_metadata.avatar_url || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+            document.getElementById('currentUserName').innerText = name;
+            document.getElementById('currentUserAvatar').src = avatar;
+        }
+        init();
+
+        function updateUI() {
+            const hasText = postContent.value.trim().length >= 2;
+            const hasImages = selectedFiles.length > 0;
+            const canSubmit = hasText || hasImages;
+            
+            postSubmitBtn.disabled = !canSubmit;
+            if (canSubmit) {
+                postSubmitBtn.classList.add('active');
+            } else {
+                postSubmitBtn.classList.remove('active');
+            }
+            
+            document.getElementById('imgCount').innerText = `(${selectedFiles.length}/4)`;
+        }
+
+        imageUpload.onchange = (e) => {
+            const files = Array.from(e.target.files);
+            const remainingSpace = 4 - selectedFiles.length;
+            
+            files.slice(0, remainingSpace).forEach(file => {
+                selectedFiles.push(file);
+            });
+            
+            renderImages();
+            e.target.value = ""; // Reset input so same file can be picked again if removed
+        };
+
+        function renderImages() {
+            // Clear but keep the hidden input label elsewhere or re-append it
+            imageGrid.innerHTML = '';
+            
+            selectedFiles.forEach((file, i) => {
+                const url = URL.createObjectURL(file);
+                const div = document.createElement('div');
+                div.className = 'image-preview-wrapper';
+                div.innerHTML = `
+                    <img src="${url}" class="preview-img">
+                    <button class="remove-img-btn" onclick="removeImage(${i})"><i class="fa-solid fa-xmark"></i></button>
+                `;
+                imageGrid.appendChild(div);
+            });
+
+            if (selectedFiles.length < 4) {
+                const addBtn = document.createElement('label');
+                addBtn.className = 'add-image-btn';
+                addBtn.setAttribute('for', 'imageUpload');
+                addBtn.innerHTML = `<i class="fa-solid fa-plus"></i><span>Select image</span>`;
+                imageGrid.appendChild(addBtn);
+            }
+            updateUI();
+        }
+
+        window.removeImage = (i) => {
+            selectedFiles.splice(i, 1);
+            renderImages();
+        };
+
+        postContent.oninput = updateUI;
+
+        postSubmitBtn.onclick = async () => {
+            postSubmitBtn.disabled = true;
+            postSubmitBtn.innerText = "Posting...";
+
+            try {
+                let uploadedUrls = [];
+
+                // Upload images sequentially
+                for (let file of selectedFiles) {
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+                    const filePath = `post_images/${currentUser.id}/${fileName}`;
+
+                    const { error: uploadError } = await _supabase.storage
+                        .from('post_images')
+                        .upload(filePath, file);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data } = _supabase.storage
+                        .from('post_images')
+                        .getPublicUrl(filePath);
+
+                    uploadedUrls.push(data.publicUrl);
+                }
+
+                // Insert post into table
+                const { error: dbError } = await _supabase
+                    .from('posts')
+                    .insert([{
+                        uid: currentUser.id,
+                        text: postContent.value.trim(),
+                        img1: uploadedUrls[0] || null,
+                        img2: uploadedUrls[1] || null,
+                        img3: uploadedUrls[2] || null,
+                        img4: uploadedUrls[3] || null,
+                        view: 0,
+                        created_at: new Date()
+                    }]);
+
+                if (dbError) throw dbError;
+
+                window.location.href = "home.html";
+
+            } catch (err) {
+                console.error(err);
+                alert("Failed to post: " + err.message);
+                postSubmitBtn.disabled = false;
+                postSubmitBtn.innerText = "Post";
+                updateUI();
+            }
+        };
+    </script>
+</body>
+</html>
